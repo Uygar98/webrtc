@@ -1,0 +1,11 @@
+{
+    "name": "webrtc",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "coffee-script": "1.12.7",
+        "ejs": "2.x",
+        "express": "4.x",
+        "express.io": "1.x"
+    }
+}

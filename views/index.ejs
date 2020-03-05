@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Uygar</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div>
+        Video: <select id="camera"></select>
+    </div>
+
+    <p>
+        <button id="takeProfilePicture" type="button" autofocus="true">Take Picture</button>
+    </p>
+
+    <video id="videoTag" autoplay></video>
+
+    <div>
+        <label>Firstname</label><input id="myName" type="text" />
+        <label>Message</label><input id="myMessage" type="text" />
+        <input id="sendMessage" type="submit" />
+        <div id="chatArea">This is all the messages</br></div>
+    </div>
+
+
+    <script>
+
+        var videoArea = document.querySelector("video");
+        var videoSelect = document.querySelector('#camera');
+
+        var myName = document.querySelector("#myName");
+        var myMessage = document.querySelector("#myMessage");
+        var sendMessage = document.querySelector("#sendMessage");
+        var chatArea = document.querySelector("#chatArea");
+        var ROOM ="chat";
+
+        videoSelect.onchange = startStream;
+        navigator.mediaDevices.enumerateDevices()
+            .then(getCameras)
+            .catch((err) => {
+                console.log(err.name + ": " + err.message);
+            });
+
+
+
+       // startStream();
+
+        io = io.connect();
+        io.emit('ready', ROOM);
+
+        io.on('annouce', function(data){
+            displayMessage(data.message);
+
+        });
+
+        io.on('message', function(data){
+            displayMessage(data.author + ": " + data.message);
+
+        });
+
+        function displayMessage(message) {
+            chatArea.innerHTML = chatArea.innerHTML + "<br/>" + message;
+        }
+
+        sendMessage.addEventListener('click', function(ev) {
+        
+            io.emit('send', {"author":myName.value, "message":myMessage.value, "room":ROOM});
+            ev.preventDefault();
+
+        }, false);
+
+
+        function getCameras(devices) {
+            devices.forEach(function (device) {
+                var option = document.createElement('option');
+                option.value = device.id;
+                if (device.kind === 'videoinput') {
+                    option.text = device.label || 'camera ' + (videoSelect.length + 1);
+                    videoSelect.appendChild(option);
+                }
+            })
+        }
+
+        function startStream() {
+
+            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+            var videoSource = videoSelect.value;
+            var constraints = {
+                audio: false,
+                video: false
+
+
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints).then(onSuccess).catch(onError)
+        }
+
+        function onSuccess(stream) {
+            var video = document.querySelector('video');
+            console.log("Success We have a stream");
+            video.srcObject = stream;
+
+            video.onloadedmetadata = function (e) {
+                // Do something with the video here.
+            };
+        }
+
+        function onError(error) {
+            console.log("Error", error);
+
+        }
+
+    </script>
+
+</body>
+
+</html>
